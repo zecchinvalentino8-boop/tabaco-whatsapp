@@ -579,10 +579,12 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 
   // Fondo
   (function setBackground(){
-    if (!BACKGROUND_URL) return;
-    document.body.classList.add("has-bg");
-    document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
-  })();
+  if (!BACKGROUND_URL) return;
+  document.body.classList.add("has-bg");
+  document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
+  document.body.style.backgroundPosition = "55% 20px";
+})();
+
 
   // Init
   (async () => {
