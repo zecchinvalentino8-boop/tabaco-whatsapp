@@ -15,7 +15,7 @@
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui,Segoe UI,Arial;
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background:var(--bg);
   color:var(--fg);
 }
@@ -45,14 +45,20 @@ header{
   padding:8px 14px;
   cursor:pointer;
   font-weight:900;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
-.cart-btn span{
+.cart-btn .count{
   background:var(--gold);
   color:#000;
   border-radius:10px;
   padding:2px 7px;
-  margin-left:6px;
   font-size:12px;
+  font-weight:900;
+  line-height:1.2;
+  min-width:22px;
+  text-align:center;
 }
 .tabs{
   display:flex;
@@ -67,6 +73,7 @@ header{
   padding:10px 18px;
   cursor:pointer;
   font-weight:800;
+  letter-spacing:1px;
 }
 .tabs button.active{
   background:var(--gold);
@@ -89,22 +96,73 @@ main{max-width:1100px;margin:auto;padding:0 20px 40px}
 }
 .product img{
   max-width:160px;
-  margin-bottom:12px;
+  height:auto;
+  margin:0 auto 12px;
+  display:block;
 }
+.product-name{ font-size:14px; margin-bottom:6px; }
+.product-price{ font-size:14px; margin-bottom:10px; }
+
 .qty{
   display:flex;
   justify-content:center;
+  align-items:center;
   gap:10px;
   margin:10px 0;
 }
-.qty button{width:32px;height:32px}
-.add{font-weight:900;padding:6px 14px;cursor:pointer}
+.qty button{
+  width:32px;
+  height:32px;
+  border:1px solid #000;
+  background:#fff;
+  cursor:pointer;
+  font-weight:800;
+}
+.qty span{ min-width:30px; text-align:center; font-weight:900; }
+.add{
+  border:1px solid #000;
+  background:#fff;
+  padding:8px 14px;
+  cursor:pointer;
+  font-weight:900;
+}
+.hint{ font-size:12px; opacity:.75; margin-top:10px; }
 
-.cart ul{list-style:none;padding:0}
+.cart{
+  max-width:700px;
+  margin:0 auto;
+}
+.cart ul{list-style:none;padding:0;margin:0}
 .cart li{
   display:flex;
   justify-content:space-between;
   margin-bottom:10px;
+  border-bottom:1px solid #222;
+  padding-bottom:10px;
+}
+.cart-left{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.cart-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.cart-actions button{
+  width:30px;height:30px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  cursor:pointer;
+  font-weight:900;
+}
+.cart-total{
+  display:flex;
+  justify-content:space-between;
+  font-weight:900;
+  margin:18px 0;
 }
 .buy{
   width:100%;
@@ -122,6 +180,13 @@ main{max-width:1100px;margin:auto;padding:0 20px 40px}
   border:1px solid #333;
   padding:12px;
   cursor:pointer;
+  font-weight:900;
+}
+.note{
+  text-align:center;
+  opacity:.75;
+  font-size:12px;
+  margin-top:14px;
 }
 </style>
 </head>
@@ -131,7 +196,9 @@ main{max-width:1100px;margin:auto;padding:0 20px 40px}
 <header>
   <div class="header-inner">
     <div>TABACO</div>
-    <button class="cart-btn" id="cartTabBtn">🛒 <span id="cartCount">0</span></button>
+    <button class="cart-btn" id="cartTabBtn" type="button" title="Ver carrito">
+      🛒 <span class="count" id="cartCount">0</span>
+    </button>
   </div>
 </header>
 
@@ -152,96 +219,237 @@ main{max-width:1100px;margin:auto;padding:0 20px 40px}
 
   <section id="carrito" class="section cart">
     <ul id="cartList"></ul>
-    <div><b>Total:</b> <span id="cartTotal">$0</span></div>
+
+    <div class="cart-total">
+      <span>Total</span>
+      <span id="cartTotal">$0</span>
+    </div>
+
     <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
     <button class="danger" id="clearBtn">BORRAR CARRITO</button>
+
+    <div class="note">Compra directa por WhatsApp. No se solicitan datos personales.</div>
   </section>
 </main>
 
 <script>
-const WHATSAPP_PHONE="5493515060159";
-const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
+const WHATSAPP_PHONE = "5493515060159";
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
-let products=[],combinados=[],cart={},pending={};
+let products = [];
+let combinados = [];
+let cart = {};     // {id: qty}
+let pending = {};  // {id: qtyPendiente}
 
-const $=id=>document.getElementById(id);
-const money=n=>"$"+n.toLocaleString("es-AR");
+const $ = (id) => document.getElementById(id);
+const money = (n) => `$${Number(n||0).toLocaleString("es-AR")}`;
 
-function parseCSV(t){
-  const l=t.trim().split("\n");
-  const h=l.shift().split(",");
-  return l.map(r=>{
-    const o={};
-    r.split(",").forEach((v,i)=>o[h[i]]=v);
-    return o;
-  });
+// CSV robusto
+function parseCSV(text){
+  text = text.replace(/\r/g, "");
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++){
+    const ch = text[i];
+
+    if (ch === '"'){
+      if (inQuotes && text[i+1] === '"'){ cur += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes){
+      row.push(cur);
+      cur = "";
+    } else if (ch === '\n' && !inQuotes){
+      row.push(cur);
+      rows.push(row);
+      row = [];
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur.length || row.length){
+    row.push(cur);
+    rows.push(row);
+  }
+
+  const headers = rows.shift().map(h => h.trim().toLowerCase().replace(/^\uFEFF/, ""));
+  return rows
+    .filter(r => r.some(x => String(x).trim() !== ""))
+    .map(r => {
+      const obj = {};
+      headers.forEach((h, i) => obj[h] = (r[i] ?? "").trim());
+      return obj;
+    });
+}
+
+function cleanUrl(u){
+  return String(u || "").trim().replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
 }
 
 async function load(){
-  const r=await fetch(SHEET+"&v="+Date.now());
-  const d=parseCSV(await r.text()).filter(x=>x.activo=="1");
-  products=d.filter(p=>!/^combinado/i.test(p.id));
-  combinados=d.filter(p=>/^combinado/i.test(p.id));
-  render();
-}
+  const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("No se pudo leer el CSV");
 
-function render(){
-  $("products").innerHTML=products.map(p=>card(p)).join("");
-  $("combinadosList").innerHTML=combinados.map(p=>card(p)).join("");
-  renderCart();
+  const rows = parseCSV(await res.text());
+
+  // columnas: id,nombre,precio,imagen,activo
+  const all = rows
+    .filter(r => String(r.activo).trim() === "1")
+    .map(r => ({
+      id: String(r.id || "").trim(),
+      nombre: String(r.nombre || "").trim(),
+      precio: Number(String(r.precio || "0").replace(/[^\d]/g, "")),
+      imagen: cleanUrl(r.imagen)
+    }))
+    .filter(p => p.id && p.nombre && Number.isFinite(p.precio));
+
+  products = all.filter(p => !/^combinado/i.test(p.id));
+  combinados = all.filter(p => /^combinado/i.test(p.id));
+
+  // limpiar carrito/pending de ids que ya no existen
+  const ids = new Set(all.map(p => p.id));
+  Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
+  Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
+
+  renderAll();
 }
 
 function card(p){
+  const pend = pending[p.id] || 0;
+  const inCart = cart[p.id] || 0;
+
   return `<div class="product">
-    <img src="${p.imagen}" onerror="this.style.display='none'">
-    <div>${p.nombre}</div>
-    <div>${money(+p.precio)}</div>
+    <img src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none'">
+    <div class="product-name">${p.nombre}</div>
+    <div class="product-price">${money(p.precio)}</div>
+
     <div class="qty">
-      <button onclick="chg('${p.id}',-1)">-</button>
-      <span>${pending[p.id]||0}</span>
-      <button onclick="chg('${p.id}',1)">+</button>
+      <button type="button" onclick="chg('${p.id}',-1)">−</button>
+      <span>${pend}</span>
+      <button type="button" onclick="chg('${p.id}',1)">+</button>
     </div>
-    <button class="add" onclick="add('${p.id}')">AGREGAR</button>
+
+    <button class="add" type="button" onclick="add('${p.id}')">AGREGAR AL CARRITO</button>
+
+    <div class="hint">En carrito: <b>${inCart}</b></div>
   </div>`;
 }
 
-function chg(id,v){pending[id]=(pending[id]||0)+v;if(pending[id]<0)pending[id]=0;render()}
-function add(id){cart[id]=(cart[id]||0)+(pending[id]||0);pending[id]=0;render()}
-
-function renderCart(){
-  const all=[...products,...combinados];
-  let total=0,count=0;
-  $("cartList").innerHTML=Object.keys(cart).map(id=>{
-    const p=all.find(x=>x.id==id);
-    const s=cart[id]*(+p.precio);
-    total+=s;count+=cart[id];
-    return `<li>${p.nombre} x${cart[id]} <b>${money(s)}</b></li>`;
-  }).join("");
-  $("cartTotal").textContent=money(total);
-  $("cartCount").textContent=count;
+function renderAll(){
+  $("products").innerHTML = products.map(card).join("");
+  $("combinadosList").innerHTML = combinados.map(card).join("");
+  renderCart();
 }
 
-document.querySelectorAll(".tabs button").forEach(b=>{
-  b.onclick=()=>{
+function chg(id, delta){
+  pending[id] = (pending[id] || 0) + delta;
+  if (pending[id] < 0) pending[id] = 0;
+  renderAll();
+}
+
+function add(id){
+  const q = pending[id] || 0;
+  if (q <= 0) return;
+  cart[id] = (cart[id] || 0) + q;
+  pending[id] = 0;
+  renderAll();
+}
+
+function cartChange(id, delta){
+  cart[id] = (cart[id] || 0) + delta;
+  if (cart[id] <= 0) delete cart[id];
+  renderAll();
+}
+
+function renderCart(){
+  const all = [...products, ...combinados];
+  const map = new Map(all.map(p => [p.id, p]));
+
+  let total = 0;
+  let count = 0;
+
+  const items = Object.keys(cart).filter(id => cart[id] > 0);
+
+  $("cartList").innerHTML = items.map(id => {
+    const p = map.get(id);
+    const q = cart[id];
+    if (!p) return "";
+    const sub = q * p.precio;
+    total += sub;
+    count += q;
+
+    return `<li>
+      <div class="cart-left">
+        <div><b>${p.nombre}</b></div>
+        <div>${money(p.precio)} c/u</div>
+      </div>
+      <div class="cart-actions">
+        <button type="button" onclick="cartChange('${id}',-1)">−</button>
+        <b>${q}</b>
+        <button type="button" onclick="cartChange('${id}',1)">+</button>
+      </div>
+    </li>`;
+  }).join("");
+
+  $("cartTotal").textContent = money(total);
+  $("cartCount").textContent = count;
+}
+
+// Tabs
+document.querySelectorAll(".tabs button").forEach(btn=>{
+  btn.onclick=()=>{
     document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
     document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-    b.classList.add("active");
-    $(b.dataset.tab).classList.add("active");
-  }
+    btn.classList.add("active");
+    $(btn.dataset.tab).classList.add("active");
+  };
 });
 
-$("cartTabBtn").onclick=()=>document.querySelector('[data-tab="carrito"]').click();
-$("clearBtn").onclick=()=>{cart={};pending={};render()};
-
-$("buyBtn").onclick=()=>{
-  let msg="Hola quiero comprar:%0A";
-  [...products,...combinados].forEach(p=>{
-    if(cart[p.id])msg+=`${p.nombre} x${cart[p.id]}%0A`;
-  });
-  window.location=`https://wa.me/${WHATSAPP_PHONE}?text=${msg}`;
+// Botón carrito arriba abre pestaña carrito
+$("cartTabBtn").onclick = () => {
+  document.querySelector('.tabs button[data-tab="carrito"]').click();
 };
 
-load();
+$("clearBtn").onclick = () => {
+  cart = {};
+  pending = {};
+  renderAll();
+};
+
+$("buyBtn").onclick = () => {
+  const ids = Object.keys(cart).filter(id => cart[id] > 0);
+  if (ids.length === 0){
+    alert("El carrito está vacío");
+    return;
+  }
+
+  const all = [...products, ...combinados];
+  const map = new Map(all.map(p => [p.id, p]));
+
+  let total = 0;
+  let text = "Hola 👋 quiero hacer una compra:\n\n";
+
+  ids.forEach(id => {
+    const p = map.get(id);
+    const q = cart[id];
+    if (!p) return;
+    const sub = q * p.precio;
+    total += sub;
+    text += `• ${p.nombre} x${q} – ${money(sub)}\n`;
+  });
+
+  text += `\n💰 Total: ${money(total)}`;
+  window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
+};
+
+load().catch(err=>{
+  console.error(err);
+  alert("No se pudieron cargar productos. Revisá que el CSV esté publicado.");
+});
 </script>
 </body>
 </html>
