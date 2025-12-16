@@ -1,461 +1,247 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TABACO – Compra por WhatsApp</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TABACO – Compra por WhatsApp</title>
 
-  <style>
-    :root{
-      --bg:#000;
-      --fg:#f5f5f5;
-      --gold:#f6c000;
-      --border:#222;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--bg);
-      color:var(--fg);
-    }
-    header{
-      position:sticky;
-      top:0;
-      z-index:10;
-      background:#000;
-      border-bottom:1px solid var(--border);
-    }
-    .header-inner{
-      max-width:1100px;
-      margin:auto;
-      padding:14px 20px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      font-weight:800;
-      letter-spacing:2px;
-      color:var(--gold);
-      gap:10px;
-    }
-    .header-actions{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+<style>
+:root{
+  --bg:#000;
+  --fg:#f5f5f5;
+  --gold:#f6c000;
+  --border:#222;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,Segoe UI,Arial;
+  background:var(--bg);
+  color:var(--fg);
+}
+header{
+  position:sticky;
+  top:0;
+  background:#000;
+  border-bottom:1px solid var(--border);
+  z-index:10;
+}
+.header-inner{
+  max-width:1100px;
+  margin:auto;
+  padding:14px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:800;
+  letter-spacing:2px;
+  color:var(--gold);
+}
+.cart-btn{
+  background:#111;
+  border:1px solid #333;
+  border-radius:20px;
+  color:var(--gold);
+  padding:8px 14px;
+  cursor:pointer;
+  font-weight:900;
+}
+.cart-btn span{
+  background:var(--gold);
+  color:#000;
+  border-radius:10px;
+  padding:2px 7px;
+  margin-left:6px;
+  font-size:12px;
+}
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  padding:20px 0;
+}
+.tabs button{
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  padding:10px 18px;
+  cursor:pointer;
+  font-weight:800;
+}
+.tabs button.active{
+  background:var(--gold);
+  color:#000;
+}
+main{max-width:1100px;margin:auto;padding:0 20px 40px}
+.section{display:none}
+.section.active{display:block}
 
-    /* Botón carrito arriba a la derecha */
-    .cart-top-btn{
-      background:#111;
-      color:var(--gold);
-      border:1px solid #333;
-      border-radius:20px;
-      padding:8px 14px;
-      cursor:pointer;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      letter-spacing:.5px;
-      font-size:13px;
-      white-space:nowrap;
-    }
-    .cart-top-btn .count{
-      background:var(--gold);
-      color:#000;
-      border-radius:10px;
-      padding:2px 7px;
-      font-size:12px;
-      font-weight:900;
-      line-height:1.2;
-      min-width:22px;
-      text-align:center;
-    }
+.products{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:40px;
+}
+.product{
+  background:#fff;
+  color:#000;
+  padding:20px;
+  text-align:center;
+}
+.product img{
+  max-width:160px;
+  margin-bottom:12px;
+}
+.qty{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:10px 0;
+}
+.qty button{width:32px;height:32px}
+.add{font-weight:900;padding:6px 14px;cursor:pointer}
 
-    main{ max-width:1100px; margin:auto; padding:40px 20px; }
-    h2{ text-align:center; letter-spacing:2px; margin-bottom:40px; }
-
-    .products{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-      gap:40px;
-    }
-    .product{
-      background:#fff;
-      color:#000;
-      border-radius:4px;
-      padding:20px;
-      text-align:center;
-    }
-    .product img{
-      max-width:180px;
-      height:auto;
-      margin-bottom:16px;
-      display:block;
-      margin-left:auto;
-      margin-right:auto;
-    }
-    .product-name{ font-size:14px; margin-bottom:6px; }
-    .product-price{ font-size:14px; margin-bottom:16px; }
-
-    .qty{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .qty button{
-      width:32px;
-      height:32px;
-      border:1px solid #000;
-      background:#fff;
-      cursor:pointer;
-      font-weight:700;
-    }
-    .qty span{
-      min-width:30px;
-      text-align:center;
-      font-weight:800;
-    }
-    .add{
-      border:1px solid #000;
-      background:#fff;
-      padding:8px 14px;
-      cursor:pointer;
-      font-weight:900;
-    }
-    .hint{ font-size:12px; opacity:.75; margin-top:10px; }
-
-    .cart{
-      margin-top:60px;
-      border-top:1px solid var(--border);
-      padding-top:30px;
-    }
-    .cart h3{ text-align:center; margin-bottom:20px; }
-    .cart ul{ list-style:none; padding:0; margin:0 0 20px; }
-    .cart li{
-      display:flex;
-      justify-content:space-between;
-      margin-bottom:8px;
-      font-size:14px;
-    }
-    .cart-total{
-      display:flex;
-      justify-content:space-between;
-      font-weight:900;
-      margin-bottom:20px;
-    }
-    .buy{
-      width:100%;
-      padding:14px;
-      background:var(--gold);
-      border:none;
-      font-weight:900;
-      cursor:pointer;
-    }
-    .danger{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      background:#111;
-      color:#f5f5f5;
-      border:1px solid #333;
-      font-weight:900;
-      cursor:pointer;
-      border-radius:10px;
-    }
-    footer{ margin-top:60px; text-align:center; font-size:12px; opacity:.7; }
-  </style>
+.cart ul{list-style:none;padding:0}
+.cart li{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.buy{
+  width:100%;
+  background:var(--gold);
+  border:none;
+  padding:14px;
+  font-weight:900;
+  cursor:pointer;
+}
+.danger{
+  width:100%;
+  margin-top:10px;
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  padding:12px;
+  cursor:pointer;
+}
+</style>
 </head>
 
 <body>
+
 <header>
   <div class="header-inner">
     <div>TABACO</div>
-    <div class="header-actions">
-      <button class="cart-top-btn" id="goToCart" type="button" title="Ver carrito">
-        🛒 <span class="count" id="cartCount">0</span>
-      </button>
-    </div>
+    <button class="cart-btn" id="cartTabBtn">🛒 <span id="cartCount">0</span></button>
   </div>
 </header>
 
+<div class="tabs">
+  <button class="active" data-tab="productos">PRODUCTOS</button>
+  <button data-tab="combinados">COMBINADOS</button>
+  <button data-tab="carrito">CARRITO</button>
+</div>
+
 <main>
-  <h2>PRODUCTOS</h2>
-  <section class="products" id="products"></section>
-
-  <h2 style="margin-top:70px;">COMBINADOS</h2>
-  <section class="products" id="combinados"></section>
-
-  <section class="cart" id="cartSection">
-    <h3>Carrito</h3>
-    <ul id="cartList"></ul>
-    <div class="cart-total">
-      <span>Total</span>
-      <span id="cartTotal">$0</span>
-    </div>
-    <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
-    <button class="danger" id="clearBtn2" type="button">BORRAR CARRITO</button>
+  <section id="productos" class="section active">
+    <div class="products" id="products"></div>
   </section>
 
-  <footer>
-    Compra directa por WhatsApp. No se solicitan datos personales.
-  </footer>
+  <section id="combinados" class="section">
+    <div class="products" id="combinadosList"></div>
+  </section>
+
+  <section id="carrito" class="section cart">
+    <ul id="cartList"></ul>
+    <div><b>Total:</b> <span id="cartTotal">$0</span></div>
+    <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
+    <button class="danger" id="clearBtn">BORRAR CARRITO</button>
+  </section>
 </main>
 
 <script>
-  // ===== CONFIG =====
-  const WHATSAPP_PHONE = "5493515060159";
+const WHATSAPP_PHONE="5493515060159";
+const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
-  // CSV publicado
-  const SHEET_CSV_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
+let products=[],combinados=[],cart={},pending={};
 
-  // ===== STATE =====
-  let products = [];     // normales
-  let combinados = [];   // id empieza con "Combinado"
-  let cart = {};         // {id: qty}
-  let pending = {};      // {id: qtyPendiente}
+const $=id=>document.getElementById(id);
+const money=n=>"$"+n.toLocaleString("es-AR");
 
-  const productsEl = document.getElementById("products");
-  const combinadosEl = document.getElementById("combinados");
+function parseCSV(t){
+  const l=t.trim().split("\n");
+  const h=l.shift().split(",");
+  return l.map(r=>{
+    const o={};
+    r.split(",").forEach((v,i)=>o[h[i]]=v);
+    return o;
+  });
+}
 
-  const cartList = document.getElementById("cartList");
-  const cartTotal = document.getElementById("cartTotal");
-  const buyBtn = document.getElementById("buyBtn");
+async function load(){
+  const r=await fetch(SHEET+"&v="+Date.now());
+  const d=parseCSV(await r.text()).filter(x=>x.activo=="1");
+  products=d.filter(p=>!/^combinado/i.test(p.id));
+  combinados=d.filter(p=>/^combinado/i.test(p.id));
+  render();
+}
 
-  const clearBtn2 = document.getElementById("clearBtn2");
+function render(){
+  $("products").innerHTML=products.map(p=>card(p)).join("");
+  $("combinadosList").innerHTML=combinados.map(p=>card(p)).join("");
+  renderCart();
+}
 
-  // Carrito arriba
-  const goToCartBtn = document.getElementById("goToCart");
-  const cartCountEl = document.getElementById("cartCount");
+function card(p){
+  return `<div class="product">
+    <img src="${p.imagen}" onerror="this.style.display='none'">
+    <div>${p.nombre}</div>
+    <div>${money(+p.precio)}</div>
+    <div class="qty">
+      <button onclick="chg('${p.id}',-1)">-</button>
+      <span>${pending[p.id]||0}</span>
+      <button onclick="chg('${p.id}',1)">+</button>
+    </div>
+    <button class="add" onclick="add('${p.id}')">AGREGAR</button>
+  </div>`;
+}
 
-  // ===== HELPERS =====
-  const fmt = (n) => n.toLocaleString("es-AR");
-  const money = (n) => `$${fmt(n)}`;
+function chg(id,v){pending[id]=(pending[id]||0)+v;if(pending[id]<0)pending[id]=0;render()}
+function add(id){cart[id]=(cart[id]||0)+(pending[id]||0);pending[id]=0;render()}
 
-  // CSV robusto (soporta comillas y comas dentro)
-  function parseCSV(text){
-    text = text.replace(/\r/g, "");
-    const rows = [];
-    let row = [];
-    let cur = "";
-    let inQuotes = false;
+function renderCart(){
+  const all=[...products,...combinados];
+  let total=0,count=0;
+  $("cartList").innerHTML=Object.keys(cart).map(id=>{
+    const p=all.find(x=>x.id==id);
+    const s=cart[id]*(+p.precio);
+    total+=s;count+=cart[id];
+    return `<li>${p.nombre} x${cart[id]} <b>${money(s)}</b></li>`;
+  }).join("");
+  $("cartTotal").textContent=money(total);
+  $("cartCount").textContent=count;
+}
 
-    for (let i = 0; i < text.length; i++){
-      const ch = text[i];
-
-      if (ch === '"'){
-        if (inQuotes && text[i+1] === '"'){ cur += '"'; i++; }
-        else inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes){
-        row.push(cur); cur = "";
-      } else if (ch === '\n' && !inQuotes){
-        row.push(cur); rows.push(row);
-        row = []; cur = "";
-      } else {
-        cur += ch;
-      }
-    }
-    if (cur.length || row.length){ row.push(cur); rows.push(row); }
-
-    const headers = rows.shift().map(h => h.trim().toLowerCase().replace(/^\uFEFF/, ""));
-    return rows
-      .filter(r => r.some(x => String(x).trim() !== ""))
-      .map(r => {
-        const obj = {};
-        headers.forEach((h, idx) => obj[h] = (r[idx] ?? "").trim());
-        return obj;
-      });
+document.querySelectorAll(".tabs button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    b.classList.add("active");
+    $(b.dataset.tab).classList.add("active");
   }
+});
 
-  function cleanUrl(u){
-    return String(u || "").trim().replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
-  }
+$("cartTabBtn").onclick=()=>document.querySelector('[data-tab="carrito"]').click();
+$("clearBtn").onclick=()=>{cart={};pending={};render()};
 
-  async function loadProducts(){
-    // cache-busting para que tome cambios del Sheet
-    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
+$("buyBtn").onclick=()=>{
+  let msg="Hola quiero comprar:%0A";
+  [...products,...combinados].forEach(p=>{
+    if(cart[p.id])msg+=`${p.nombre} x${cart[p.id]}%0A`;
+  });
+  window.location=`https://wa.me/${WHATSAPP_PHONE}?text=${msg}`;
+};
 
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("No se pudo leer el CSV (HTTP " + res.status + ")");
-
-    const csv = await res.text();
-    const rows = parseCSV(csv);
-
-    const all = rows
-      .filter(r => String(r.activo).trim() === "1")
-      .map(r => ({
-        id: String(r.id || "").trim(),
-        name: String(r.nombre || "").trim(),
-        price: Number(String(r.precio || "0").replace(/[^\d]/g, "")),
-        image: cleanUrl(r.imagen)
-      }))
-      .filter(p => p.id && p.name && Number.isFinite(p.price));
-
-    // Separar combinados por id "Combinado..."
-    products = all.filter(p => !/^combinado/i.test(p.id));
-    combinados = all.filter(p => /^combinado/i.test(p.id));
-
-    // Limpiar ids que ya no existen
-    const ids = new Set([...products, ...combinados].map(p => p.id));
-    Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
-    Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
-
-    renderProducts();
-    renderCombinados();
-    renderCart();
-  }
-
-  function renderGrid(list, targetEl){
-    targetEl.innerHTML = "";
-    list.forEach(p => {
-      const pend = pending[p.id] || 0;
-      const inCart = cart[p.id] || 0;
-
-      const el = document.createElement("div");
-      el.className = "product";
-      el.innerHTML = `
-        <img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">
-        <div class="product-name">${p.name}</div>
-        <div class="product-price">${money(p.price)}</div>
-
-        <div class="qty">
-          <button type="button" data-act="pendMinus" data-id="${p.id}">−</button>
-          <span>${pend}</span>
-          <button type="button" data-act="pendPlus" data-id="${p.id}">+</button>
-        </div>
-
-        <button class="add" type="button" data-act="addToCart" data-id="${p.id}">
-          AGREGAR AL CARRITO
-        </button>
-
-        <div class="hint">
-          En carrito: <b>${inCart}</b> — Elegí cantidad con +/− y tocá “Agregar”.
-        </div>
-      `;
-      targetEl.appendChild(el);
-    });
-  }
-
-  function renderProducts(){
-    renderGrid(products, productsEl);
-  }
-
-  function renderCombinados(){
-    renderGrid(combinados, combinadosEl);
-  }
-
-  function renderCart(){
-    cartList.innerHTML = "";
-    let total = 0;
-
-    const map = new Map([...products, ...combinados].map(p => [p.id, p]));
-
-    Object.keys(cart).forEach(id => {
-      const q = cart[id] || 0;
-      const p = map.get(id);
-      if (!p || q <= 0) return;
-
-      const sub = q * p.price;
-      total += sub;
-
-      const li = document.createElement("li");
-      li.innerHTML = `<span>${p.name} x${q}</span><span>${money(sub)}</span>`;
-      cartList.appendChild(li);
-    });
-
-    cartTotal.textContent = money(total);
-
-    // contador del carrito arriba
-    const totalItems = Object.values(cart).reduce((a,b)=>a+b,0);
-    cartCountEl.textContent = totalItems;
-  }
-
-  function pendPlus(id){
-    pending[id] = (pending[id] || 0) + 1;
-    renderProducts();
-    renderCombinados();
-  }
-  function pendMinus(id){
-    pending[id] = Math.max(0, (pending[id] || 0) - 1);
-    renderProducts();
-    renderCombinados();
-  }
-  function addToCart(id){
-    const q = pending[id] || 0;
-    if (q <= 0) return;
-    cart[id] = (cart[id] || 0) + q;
-    pending[id] = 0;
-    renderProducts();
-    renderCombinados();
-    renderCart();
-  }
-
-  // Borrar carrito
-  function clearCart(){
-    cart = {};
-    pending = {};
-    renderProducts();
-    renderCombinados();
-    renderCart();
-  }
-  clearBtn2.onclick = clearCart;
-
-  // Click en cualquier grilla (productos + combinados)
-  function handleGridClick(e){
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    const id = btn.getAttribute("data-id");
-    const act = btn.getAttribute("data-act");
-    if (!id || !act) return;
-
-    if (act === "pendPlus") pendPlus(id);
-    if (act === "pendMinus") pendMinus(id);
-    if (act === "addToCart") addToCart(id);
-  }
-  productsEl.addEventListener("click", handleGridClick);
-  combinadosEl.addEventListener("click", handleGridClick);
-
-  // Ir al carrito (botón arriba)
-  goToCartBtn.onclick = () => {
-    document.getElementById("cartSection").scrollIntoView({ behavior: "smooth" });
-  };
-
-  buyBtn.onclick = () => {
-    const ids = Object.keys(cart).filter(id => (cart[id] || 0) > 0);
-    if (ids.length === 0){
-      alert("Agregá productos al carrito");
-      return;
-    }
-
-    const map = new Map([...products, ...combinados].map(p => [p.id, p]));
-    let total = 0;
-    let text = "Hola 👋 quiero hacer una compra:\n\n";
-
-    ids.forEach(id => {
-      const p = map.get(id);
-      const q = cart[id];
-      if (!p) return;
-      const sub = q * p.price;
-      total += sub;
-      text += `• ${p.name} x${q} – ${money(sub)}\n`;
-    });
-
-    text += `\n💰 Total: ${money(total)}`;
-    window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
-  };
-
-  // Carga automática al abrir
-  (async () => {
-    try{
-      await loadProducts();
-    } catch(err){
-      console.error(err);
-      alert("Error cargando productos. Revisá el link CSV publicado.");
-    }
-  })();
+load();
 </script>
 </body>
 </html>
