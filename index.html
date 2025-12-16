@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TABACO – Compra por WhatsApp</title>
+
+  <style>
+    :root{
+      --bg:#000;
+      --fg:#f5f5f5;
+      --gold:#f6c000;
+      --card:#111;
+      --border:#222;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--fg);
+    }
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:#000;
+      border-bottom:1px solid var(--border);
+    }
+    .header-inner{
+      max-width:1100px;
+      margin:auto;
+      padding:14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      letter-spacing:2px;
+      color:var(--gold);
+    }
+
+    main{
+      max-width:1100px;
+      margin:auto;
+      padding:40px 20px;
+    }
+
+    h2{
+      text-align:center;
+      letter-spacing:2px;
+      margin-bottom:40px;
+    }
+
+    .products{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:40px;
+    }
+
+    .product{
+      background:#fff;
+      color:#000;
+      border-radius:4px;
+      padding:20px;
+      text-align:center;
+    }
+    .product img{
+      max-width:180px;
+      height:auto;
+      margin-bottom:16px;
+    }
+    .product-name{
+      font-size:14px;
+      margin-bottom:6px;
+    }
+    .product-price{
+      font-size:14px;
+      margin-bottom:16px;
+    }
+
+    .qty{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .qty button{
+      width:32px;
+      height:32px;
+      border:1px solid #000;
+      background:#fff;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .qty span{
+      min-width:20px;
+      text-align:center;
+      font-weight:700;
+    }
+
+    .add{
+      border:1px solid #000;
+      background:#fff;
+      padding:8px 14px;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    .cart{
+      margin-top:60px;
+      border-top:1px solid var(--border);
+      padding-top:30px;
+    }
+
+    .cart h3{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .cart ul{
+      list-style:none;
+      padding:0;
+      margin:0 0 20px;
+    }
+    .cart li{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+
+    .cart-total{
+      display:flex;
+      justify-content:space-between;
+      font-weight:800;
+      margin-bottom:20px;
+    }
+
+    .buy{
+      width:100%;
+      padding:14px;
+      background:var(--gold);
+      border:none;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    footer{
+      margin-top:60px;
+      text-align:center;
+      font-size:12px;
+      opacity:.7;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">TABACO</div>
+</header>
+
+<main>
+  <h2>PRODUCTOS</h2>
+
+  <section class="products" id="products"></section>
+
+  <section class="cart">
+    <h3>Carrito</h3>
+    <ul id="cartList"></ul>
+    <div class="cart-total">
+      <span>Total</span>
+      <span id="cartTotal">$0</span>
+    </div>
+    <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
+  </section>
+
+  <footer>
+    Compra directa por WhatsApp. No se solicitan datos personales.
+  </footer>
+</main>
+
+<script>
+  const WHATSAPP_PHONE = "5493515060159";
+
+  const products = [
+    {
+      id: "silver",
+      name: "TABACO SILVER",
+      price: 7800,
+      image: "https://i.imgur.com/9s7ZK0n.png"
+    },
+    {
+      id: "eco",
+      name: "TABACO ECO",
+      price: 7800,
+      image: "https://i.imgur.com/9s7ZK0n.png"
+    },
+    {
+      id: "vainilla",
+      name: "TABACO VAINILLA",
+      price: 7800,
+      image: "https://i.imgur.com/9s7ZK0n.png"
+    }
+  ];
+
+  let cart = {};
+
+  const productsEl = document.getElementById("products");
+  const cartList = document.getElementById("cartList");
+  const cartTotal = document.getElementById("cartTotal");
+  const buyBtn = document.getElementById("buyBtn");
+
+  function renderProducts(){
+    productsEl.innerHTML = "";
+    products.forEach(p=>{
+      const qty = cart[p.id] || 0;
+      const el = document.createElement("div");
+      el.className = "product";
+      el.innerHTML = `
+        <img src="${p.image}" alt="${p.name}">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">$${p.price.toLocaleString("es-AR")}</div>
+        <div class="qty">
+          <button onclick="changeQty('${p.id}',-1)">−</button>
+          <span>${qty}</span>
+          <button onclick="changeQty('${p.id}',1)">+</button>
+        </div>
+        <button class="add" onclick="changeQty('${p.id}',1)">
+          AGREGAR
+        </button>
+      `;
+      productsEl.appendChild(el);
+    });
+  }
+
+  function renderCart(){
+    cartList.innerHTML = "";
+    let total = 0;
+    products.forEach(p=>{
+      const q = cart[p.id] || 0;
+      if(q>0){
+        const sub = q * p.price;
+        total += sub;
+        const li = document.createElement("li");
+        li.textContent = `${p.name} x${q}`;
+        const span = document.createElement("span");
+        span.textContent = `$${sub.toLocaleString("es-AR")}`;
+        li.appendChild(span);
+        cartList.appendChild(li);
+      }
+    });
+    cartTotal.textContent = `$${total.toLocaleString("es-AR")}`;
+  }
+
+  function changeQty(id,delta){
+    cart[id] = (cart[id]||0) + delta;
+    if(cart[id]<=0) delete cart[id];
+    renderProducts();
+    renderCart();
+  }
+
+  buyBtn.onclick = ()=>{
+    if(Object.keys(cart).length===0){
+      alert("Agregá productos al carrito");
+      return;
+    }
+    let msg = "Hola 👋 quiero hacer una compra:%0A%0A";
+    let total = 0;
+    products.forEach(p=>{
+      const q = cart[p.id] || 0;
+      if(q>0){
+        const sub = q*p.price;
+        total += sub;
+        msg += `• ${p.name} x${q} – $${sub.toLocaleString("es-AR")}%0A`;
+      }
+    });
+    msg += `%0A💰 Total: $${total.toLocaleString("es-AR")}`;
+    window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${msg}`;
+  };
+
+  renderProducts();
+  renderCart();
+</script>
+
+</body>
+</html>
