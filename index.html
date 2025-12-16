@@ -26,19 +26,20 @@ body{
 body.has-bg{
   background-color:#000;
   background-repeat:no-repeat;
-  background-position:center top;
-  background-size:700px; /* 🔥 MÁS GRANDE */
+  background-position:center 20px;
+  background-size:900px; /* 🔥 MÁS GRANDE */
   background-attachment:fixed;
 }
 
-/* Overlay más liviano para que el humo blanco resalte */
+/* Overlay MUY liviano para que el blanco explote */
 body.has-bg::before{
   content:"";
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.55); /* 🔥 MENOS OSCURO */
+  background:rgba(0,0,0,.35); /* 🔥 MUCHO MÁS BLANCO */
   z-index:-1;
 }
+
 
 
 header{
