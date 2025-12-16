@@ -165,7 +165,7 @@
   <div class="header-inner">
     <div>TABACO</div>
     <div class="header-actions">
-      <button class="small-btn" id="reloadBtn" type="button">Recargar productos</button>
+     
       <button class="small-btn" id="clearBtn" type="button">Borrar carrito</button>
     </div>
   </div>
@@ -261,7 +261,7 @@
   }
 
   async function loadProducts(){
-    statusEl.textContent = "Cargando productos…";
+    
     const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
 
     const res = await fetch(url, { cache: "no-store" });
@@ -284,7 +284,7 @@
     Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
     Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
 
-    statusEl.textContent = "Productos cargados ✔";
+    
     renderProducts();
     renderCart();
   }
