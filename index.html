@@ -577,13 +577,13 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
   });
 
-  // Fondo
-  (function setBackground(){
+ (function setBackground(){
   if (!BACKGROUND_URL) return;
   document.body.classList.add("has-bg");
   document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
-  document.body.style.backgroundPosition = "70% 20px";
+  document.body.style.backgroundPosition = "center 120px";
 })();
+
 
 
   // Init
