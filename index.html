@@ -27,20 +27,18 @@ body.has-bg{
   background-color:#000;
   background-repeat:no-repeat;
   background-position:center 20px;
-  background-size:700px; /* 🔥 MÁS GRANDE */
+  background-size:700px;
   background-attachment:fixed;
 }
 
-/* Overlay MUY liviano para que el blanco explote */
+/* Overlay MUY liviano */
 body.has-bg::before{
   content:"";
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.08); /* 🔥 MUCHO MÁS BLANCO */
+  background:rgba(0,0,0,.08);
   z-index:-1;
 }
-
-
 
 header{
   position:sticky;
@@ -168,7 +166,9 @@ h2{ text-align:center; letter-spacing:2px; margin:18px 0 30px; }
   gap:12px;
   padding:10px 0;
   border-bottom:1px solid #1b1b1b;
+  align-items:center;
 }
+
 .cart-actions{
   display:flex;
   align-items:center;
@@ -182,6 +182,11 @@ h2{ text-align:center; letter-spacing:2px; margin:18px 0 30px; }
   cursor:pointer;
   font-weight:900;
 }
+.cart-actions .remove{
+  width:auto;
+  padding:0 10px;
+}
+
 .cart-total{
   display:flex;
   justify-content:space-between;
@@ -210,6 +215,12 @@ h2{ text-align:center; letter-spacing:2px; margin:18px 0 30px; }
 footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 .small-note{ text-align:center; font-size:12px; opacity:.75; margin-top:10px; }
 
+.small-muted{
+  opacity:.7;
+  font-size:12px;
+  text-align:center;
+  margin:8px 0 0;
+}
 </style>
 </head>
 
@@ -256,6 +267,8 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 
       <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
       <button class="danger" id="clearBtn" type="button">VACIAR CARRITO</button>
+
+      <div class="small-muted">Podés editar cantidades con +/− o borrar cada producto.</div>
     </div>
 
     <footer>Compra directa por WhatsApp. No se solicitan datos personales.</footer>
@@ -266,11 +279,12 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
   // ===== CONFIG =====
   const WHATSAPP_PHONE = "5493515060159";
 
-  // Tu CSV publicado:
+  // Tu CSV publicado (debe ser .../pub?output=csv)
   const SHEET_CSV_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
-  // 👇 PEGÁ ACÁ EL LINK DIRECTO de Imgur (i.imgur.com/... .png/.jpg)
+  // Fondo (tiene que ser link directo i.imgur.com/... .jpg/.png)
+  // Si no querés fondo, dejalo vacío: ""
   const BACKGROUND_URL = "https://i.imgur.com/GFxLBRF.jpg";
 
   // ===== STATE =====
@@ -334,12 +348,15 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
   }
 
   async function loadProducts(){
+    // cache-busting para que agarre cambios del Sheet
     const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
+
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error("No se pudo leer el CSV (HTTP " + res.status + ")");
 
     const rows = parseCSV(await res.text());
 
+    // columnas esperadas: id,nombre,precio,imagen,activo
     const all = rows
       .filter(r => String(r.activo).trim() === "1")
       .map(r => ({
@@ -370,7 +387,8 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     const el = document.createElement("div");
     el.className = "product";
     el.innerHTML = `
-      <img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">
+      <img src="${p.image}" alt="${p.name}" referrerpolicy="no-referrer" crossorigin="anonymous"
+           onerror="this.style.display='none'">
       <div class="product-name">${p.name}</div>
       <div class="product-price">${money(p.price)}</div>
 
@@ -407,22 +425,40 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     const all = [...products, ...combinados];
     const map = new Map(all.map(p => [p.id, p]));
 
-    Object.keys(cart).forEach(id => {
-      const q = cart[id] || 0;
-      const p = map.get(id);
-      if (!p || q <= 0) return;
+    const ids = Object.keys(cart).filter(id => (cart[id] || 0) > 0);
 
-      const sub = q * p.price;
-      total += sub;
-      count += q;
+    if (ids.length === 0){
+      const empty = document.createElement("li");
+      empty.style.borderBottom = "none";
+      empty.style.justifyContent = "center";
+      empty.style.opacity = ".75";
+      empty.textContent = "Tu carrito está vacío.";
+      cartList.appendChild(empty);
+    } else {
+      ids.forEach(id => {
+        const q = cart[id] || 0;
+        const p = map.get(id);
+        if (!p || q <= 0) return;
 
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>${p.name} x${q}</span>
-        <span>${money(sub)}</span>
-      `;
-      cartList.appendChild(li);
-    });
+        const sub = q * p.price;
+        total += sub;
+        count += q;
+
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span>${p.name}</span>
+
+          <div class="cart-actions">
+            <button type="button" data-act="cartMinus" data-id="${p.id}" aria-label="Restar">−</button>
+            <span style="min-width:24px;text-align:center;font-weight:900;">${q}</span>
+            <button type="button" data-act="cartPlus" data-id="${p.id}" aria-label="Sumar">+</button>
+            <button class="remove" type="button" data-act="cartRemove" data-id="${p.id}" title="Borrar">🗑️</button>
+            <span style="min-width:90px;text-align:right;font-weight:900;">${money(sub)}</span>
+          </div>
+        `;
+        cartList.appendChild(li);
+      });
+    }
 
     cartTotal.textContent = money(total);
     cartCount.textContent = count;
@@ -441,6 +477,25 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     if (q <= 0) return;
     cart[id] = (cart[id] || 0) + q;
     pending[id] = 0;
+    renderProducts(); renderCombinados();
+    renderCart();
+  }
+
+  // Editar carrito de a uno
+  function cartPlus(id){
+    cart[id] = (cart[id] || 0) + 1;
+    renderProducts(); renderCombinados();
+    renderCart();
+  }
+  function cartMinus(id){
+    const next = (cart[id] || 0) - 1;
+    if (next <= 0) delete cart[id];
+    else cart[id] = next;
+    renderProducts(); renderCombinados();
+    renderCart();
+  }
+  function cartRemove(id){
+    delete cart[id];
     renderProducts(); renderCombinados();
     renderCart();
   }
@@ -467,6 +522,19 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
   productsEl.addEventListener("click", onGridClick);
   combinadosEl.addEventListener("click", onGridClick);
 
+  // Clicks dentro del carrito (editar/borrar)
+  cartList.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const id = btn.getAttribute("data-id");
+    const act = btn.getAttribute("data-act");
+    if (!id || !act) return;
+
+    if (act === "cartPlus") cartPlus(id);
+    if (act === "cartMinus") cartMinus(id);
+    if (act === "cartRemove") cartRemove(id);
+  });
+
   // Tabs
   const tabBtns = document.querySelectorAll(".tab-btn");
   const sections = document.querySelectorAll(".section");
@@ -477,9 +545,7 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  tabBtns.forEach(btn => {
-    btn.addEventListener("click", () => openTab(btn.dataset.tab));
-  });
+  tabBtns.forEach(btn => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
 
   // Ícono carrito abre pestaña carrito
   document.getElementById("cartIcon").addEventListener("click", () => openTab("carrito"));
@@ -513,7 +579,7 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 
   // Fondo
   (function setBackground(){
-    if (!BACKGROUND_URL || BACKGROUND_URL.includes("PEGAR_")) return;
+    if (!BACKGROUND_URL) return;
     document.body.classList.add("has-bg");
     document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
   })();
