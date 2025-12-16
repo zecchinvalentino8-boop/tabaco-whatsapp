@@ -59,6 +59,24 @@ header{
   color:var(--gold);
   gap:10px;
 }
+
+/* ✅ LOGO ARRIBA IZQUIERDA */
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand a{
+  display:flex;
+  align-items:center;
+  text-decoration:none;
+}
+.brand-logo{
+  height:36px;         /* ajustá tamaño si querés */
+  width:auto;
+  display:block;
+}
+
 .cart-icon{
   display:flex;
   align-items:center;
@@ -228,7 +246,12 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 
 <header>
   <div class="header-inner">
-    <div>TABAQO</div>
+    <!-- ✅ LOGO en vez de texto -->
+    <div class="brand" title="TABAQO">
+      <a href="#" onclick="openTab('productos'); return false;">
+        <img src="logo-tabaqo.png" alt="TABAQO" class="brand-logo">
+      </a>
+    </div>
 
     <div class="cart-icon" id="cartIcon" title="Ir al carrito">
       🛒 <span class="cart-count" id="cartCount">0</span>
@@ -577,14 +600,12 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
   });
 
- (function setBackground(){
-  if (!BACKGROUND_URL) return;
-  document.body.classList.add("has-bg");
-  document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
-  document.body.style.backgroundPosition = "center 120px";
-})();
-
-
+  (function setBackground(){
+    if (!BACKGROUND_URL) return;
+    document.body.classList.add("has-bg");
+    document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
+    document.body.style.backgroundPosition = "center 120px";
+  })();
 
   // Init
   (async () => {
