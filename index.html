@@ -36,6 +36,12 @@
       font-weight:800;
       letter-spacing:2px;
       color:var(--gold);
+      gap:10px;
+    }
+    .header-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
     }
     .small-btn{
       background:#111;
@@ -47,6 +53,7 @@
       font-weight:700;
       letter-spacing:.5px;
       font-size:12px;
+      white-space:nowrap;
     }
 
     main{ max-width:1100px; margin:auto; padding:40px 20px; }
@@ -131,6 +138,17 @@
       font-weight:900;
       cursor:pointer;
     }
+    .danger{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      background:#111;
+      color:#f5f5f5;
+      border:1px solid #333;
+      font-weight:900;
+      cursor:pointer;
+      border-radius:10px;
+    }
     footer{ margin-top:60px; text-align:center; font-size:12px; opacity:.7; }
 
     .status{
@@ -146,7 +164,10 @@
 <header>
   <div class="header-inner">
     <div>TABACO</div>
-    <button class="small-btn" id="reloadBtn" type="button">Recargar productos</button>
+    <div class="header-actions">
+      <button class="small-btn" id="reloadBtn" type="button">Recargar productos</button>
+      <button class="small-btn" id="clearBtn" type="button">Borrar carrito</button>
+    </div>
   </div>
 </header>
 
@@ -165,6 +186,7 @@
       <span id="cartTotal">$0</span>
     </div>
     <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
+    <button class="danger" id="clearBtn2" type="button">BORRAR CARRITO</button>
   </section>
 
   <footer>
@@ -176,13 +198,13 @@
   // ===== CONFIG =====
   const WHATSAPP_PHONE = "5493515060159";
 
-  // 👉 PEGÁ ACÁ TU LINK CSV PUBLICADO (Google Sheets "Publicar en la web" como CSV)
+  // CSV publicado (OK)
   const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
   // ===== STATE =====
   let products = [];          // viene del Sheet
   let cart = {};              // {id: qty}
-  let pending = {};           // {id: qtyPendiente} (para tu UX: + / - no agrega hasta tocar AGREGAR)
+  let pending = {};           // {id: qtyPendiente}
 
   const productsEl = document.getElementById("products");
   const cartList = document.getElementById("cartList");
@@ -191,13 +213,16 @@
   const reloadBtn = document.getElementById("reloadBtn");
   const statusEl = document.getElementById("status");
 
+  // Botones borrar
+  const clearBtn = document.getElementById("clearBtn");
+  const clearBtn2 = document.getElementById("clearBtn2");
+
   // ===== HELPERS =====
   const fmt = (n) => n.toLocaleString("es-AR");
   const money = (n) => `$${fmt(n)}`;
 
   // CSV robusto (soporta comillas y comas dentro)
   function parseCSV(text){
-    // normaliza saltos
     text = text.replace(/\r/g, "");
     const rows = [];
     let row = [];
@@ -208,29 +233,20 @@
       const ch = text[i];
 
       if (ch === '"'){
-        // doble comilla dentro de comillas => "
         if (inQuotes && text[i+1] === '"'){ cur += '"'; i++; }
         else inQuotes = !inQuotes;
       } else if (ch === ',' && !inQuotes){
-        row.push(cur);
-        cur = "";
+        row.push(cur); cur = "";
       } else if (ch === '\n' && !inQuotes){
-        row.push(cur);
-        rows.push(row);
-        row = [];
-        cur = "";
+        row.push(cur); rows.push(row);
+        row = []; cur = "";
       } else {
         cur += ch;
       }
     }
-    // última celda
-    if (cur.length || row.length){
-      row.push(cur);
-      rows.push(row);
-    }
+    if (cur.length || row.length){ row.push(cur); rows.push(row); }
 
-    // headers
-    const headers = rows.shift().map(h => h.trim().toLowerCase().replace(/^\uFEFF/, "")); // quita BOM
+    const headers = rows.shift().map(h => h.trim().toLowerCase().replace(/^\uFEFF/, ""));
     return rows
       .filter(r => r.some(x => String(x).trim() !== ""))
       .map(r => {
@@ -241,14 +257,11 @@
   }
 
   function cleanUrl(u){
-    // saca comillas si vinieran
     return String(u || "").trim().replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
   }
 
   async function loadProducts(){
     statusEl.textContent = "Cargando productos…";
-
-    // cache-busting (Google a veces cachea)
     const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
 
     const res = await fetch(url, { cache: "no-store" });
@@ -262,12 +275,11 @@
       .map(r => ({
         id: String(r.id || "").trim(),
         name: String(r.nombre || "").trim(),
-        price: Number(String(r.precio || "0").replace(/[^\d]/g, "")), // por si alguien mete $ o puntos
+        price: Number(String(r.precio || "0").replace(/[^\d]/g, "")),
         image: cleanUrl(r.imagen)
       }))
       .filter(p => p.id && p.name && Number.isFinite(p.price));
 
-    // limpia pending de productos que ya no existan
     const ids = new Set(products.map(p => p.id));
     Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
     Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
@@ -277,17 +289,14 @@
     renderCart();
   }
 
-  // ===== RENDER =====
   function renderProducts(){
     productsEl.innerHTML = "";
-
     products.forEach(p => {
       const pend = pending[p.id] || 0;
       const inCart = cart[p.id] || 0;
 
       const el = document.createElement("div");
       el.className = "product";
-
       el.innerHTML = `
         <img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">
         <div class="product-name">${p.name}</div>
@@ -307,7 +316,6 @@
           En carrito: <b>${inCart}</b> — Elegí cantidad con +/− y tocá “Agregar”.
         </div>
       `;
-
       productsEl.appendChild(el);
     });
   }
@@ -315,8 +323,6 @@
   function renderCart(){
     cartList.innerHTML = "";
     let total = 0;
-
-    // arma un mapa id->producto para seguridad
     const map = new Map(products.map(p => [p.id, p]));
 
     Object.keys(cart).forEach(id => {
@@ -335,7 +341,6 @@
     cartTotal.textContent = money(total);
   }
 
-  // ===== ACTIONS =====
   function pendPlus(id){
     pending[id] = (pending[id] || 0) + 1;
     renderProducts();
@@ -347,14 +352,22 @@
   function addToCart(id){
     const q = pending[id] || 0;
     if (q <= 0) return;
-
     cart[id] = (cart[id] || 0) + q;
     pending[id] = 0;
     renderProducts();
     renderCart();
   }
 
-  // Delegación de eventos (para que no dependas de onclick en strings)
+  // Borrar carrito
+  function clearCart(){
+    cart = {};
+    pending = {};
+    renderProducts();
+    renderCart();
+  }
+  clearBtn.onclick = clearCart;
+  clearBtn2.onclick = clearCart;
+
   productsEl.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -375,8 +388,8 @@
     }
 
     const map = new Map(products.map(p => [p.id, p]));
-    let msg = "Hola 👋 quiero hacer una compra:%0A%0A";
     let total = 0;
+    let text = "Hola 👋 quiero hacer una compra:\n\n";
 
     ids.forEach(id => {
       const p = map.get(id);
@@ -384,11 +397,13 @@
       if (!p) return;
       const sub = q * p.price;
       total += sub;
-      msg += `• ${p.name} x${q} – ${money(sub)}%0A`;
+      text += `• ${p.name} x${q} – ${money(sub)}\n`;
     });
 
-    msg += `%0A💰 Total: ${money(total)}`;
-    window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(decodeURIComponent(msg))}`;
+    text += `\n💰 Total: ${money(total)}`;
+
+    // ✅ whatsapp: encode correcto
+    window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
   };
 
   reloadBtn.onclick = async () => {
@@ -401,7 +416,6 @@
     }
   };
 
-  // ===== INIT =====
   (async () => {
     try{
       await loadProducts();
@@ -414,3 +428,4 @@
 </script>
 </body>
 </html>
+
