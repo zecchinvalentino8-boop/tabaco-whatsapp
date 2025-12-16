@@ -150,13 +150,6 @@
       border-radius:10px;
     }
     footer{ margin-top:60px; text-align:center; font-size:12px; opacity:.7; }
-
-    .status{
-      text-align:center;
-      margin:10px 0 0;
-      font-size:12px;
-      opacity:.8;
-    }
   </style>
 </head>
 
@@ -165,7 +158,6 @@
   <div class="header-inner">
     <div>TABACO</div>
     <div class="header-actions">
-     
       <button class="small-btn" id="clearBtn" type="button">Borrar carrito</button>
     </div>
   </div>
@@ -173,8 +165,6 @@
 
 <main>
   <h2>PRODUCTOS</h2>
-
-  <div class="status" id="status"></div>
 
   <section class="products" id="products"></section>
 
@@ -198,20 +188,19 @@
   // ===== CONFIG =====
   const WHATSAPP_PHONE = "5493515060159";
 
-  // CSV publicado (OK)
-  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
+  // CSV publicado
+  const SHEET_CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
   // ===== STATE =====
-  let products = [];          // viene del Sheet
-  let cart = {};              // {id: qty}
-  let pending = {};           // {id: qtyPendiente}
+  let products = [];
+  let cart = {};
+  let pending = {};
 
   const productsEl = document.getElementById("products");
   const cartList = document.getElementById("cartList");
   const cartTotal = document.getElementById("cartTotal");
   const buyBtn = document.getElementById("buyBtn");
-  const reloadBtn = document.getElementById("reloadBtn");
-  const statusEl = document.getElementById("status");
 
   // Botones borrar
   const clearBtn = document.getElementById("clearBtn");
@@ -261,7 +250,7 @@
   }
 
   async function loadProducts(){
-    
+    // cache-busting para que tome cambios del Sheet
     const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
 
     const res = await fetch(url, { cache: "no-store" });
@@ -284,7 +273,6 @@
     Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
     Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
 
-    
     renderProducts();
     renderCart();
   }
@@ -401,31 +389,18 @@
     });
 
     text += `\n💰 Total: ${money(total)}`;
-
-    // ✅ whatsapp: encode correcto
     window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
   };
 
-  reloadBtn.onclick = async () => {
-    try{
-      await loadProducts();
-    } catch(err){
-      console.error(err);
-      statusEl.textContent = "Error cargando productos. Revisá el link CSV.";
-      alert("Error cargando productos. Revisá el link CSV publicado.");
-    }
-  };
-
+  // Carga automática al abrir
   (async () => {
     try{
       await loadProducts();
     } catch(err){
       console.error(err);
-      statusEl.textContent = "Error cargando productos. Revisá el link CSV.";
       alert("Error cargando productos. Revisá el link CSV publicado.");
     }
   })();
 </script>
 </body>
 </html>
-
