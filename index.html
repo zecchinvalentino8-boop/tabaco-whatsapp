@@ -12,9 +12,7 @@
   --gold:#f6c000;
   --border:#222;
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -22,25 +20,21 @@ body{
   color:var(--fg);
 }
 
-/* Fondo de la app (imagen + overlay) */
+/* Fondo de la app (si usás background) */
 body.has-bg{
   background-color:#000;
   background-repeat:no-repeat;
-  background-position:center 20px;
-  background-size:900px; /* 🔥 MÁS GRANDE */
+  background-position:center top;
+  background-size:700px;
   background-attachment:fixed;
 }
-
-/* Overlay MUY liviano para que el blanco explote */
 body.has-bg::before{
   content:"";
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.08); /* 🔥 MUCHO MÁS BLANCO */
+  background:rgba(0,0,0,.08);
   z-index:-1;
 }
-
-
 
 header{
   position:sticky;
@@ -155,32 +149,62 @@ h2{ text-align:center; letter-spacing:2px; margin:18px 0 30px; }
 }
 .hint{ font-size:12px; opacity:.75; margin-top:10px; }
 
+/* ===== CARRITO EDITABLE ===== */
 .cart-wrap{
-  max-width:720px;
+  max-width:780px;
   margin:0 auto;
   border-top:1px solid var(--border);
   padding-top:18px;
 }
-.cart-wrap ul{ list-style:none; padding:0; margin:0 0 18px; }
-.cart-wrap li{
+.cart-items{
   display:flex;
-  justify-content:space-between;
-  gap:12px;
-  padding:10px 0;
-  border-bottom:1px solid #1b1b1b;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:18px;
 }
-.cart-actions{
+.cart-row{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border:1px solid #1b1b1b;
+  background:rgba(0,0,0,.35);
+}
+.cart-row-title{
+  font-weight:800;
+}
+.cart-row-sub{
+  opacity:.85;
+  font-size:12px;
+  margin-top:4px;
+}
+.cart-controls{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:8px;
 }
-.cart-actions button{
-  width:32px;height:32px;
+.cart-controls button{
+  width:34px;
+  height:34px;
   background:#111;
   color:#fff;
   border:1px solid #333;
   cursor:pointer;
   font-weight:900;
+}
+.cart-controls .q{
+  min-width:26px;
+  text-align:center;
+  font-weight:900;
+}
+.cart-remove{
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  cursor:pointer;
+  font-weight:900;
+  padding:8px 10px;
 }
 .cart-total{
   display:flex;
@@ -209,6 +233,13 @@ h2{ text-align:center; letter-spacing:2px; margin:18px 0 30px; }
 }
 footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 .small-note{ text-align:center; font-size:12px; opacity:.75; margin-top:10px; }
+.empty{
+  text-align:center;
+  opacity:.8;
+  padding:18px 0;
+  border:1px dashed #333;
+  background:rgba(0,0,0,.2);
+}
 
 </style>
 </head>
@@ -247,7 +278,7 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     <h2>CARRITO</h2>
 
     <div class="cart-wrap">
-      <ul id="cartList"></ul>
+      <div class="cart-items" id="cartItems"></div>
 
       <div class="cart-total">
         <span>Total</span>
@@ -266,12 +297,13 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
   // ===== CONFIG =====
   const WHATSAPP_PHONE = "5493515060159";
 
-  // Tu CSV publicado:
+  // CSV publicado (tus columnas: id,nombre,precio,imagen,activo)
   const SHEET_CSV_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
-  // 👇 PEGÁ ACÁ EL LINK DIRECTO de Imgur (i.imgur.com/... .png/.jpg)
-  const BACKGROUND_URL = "https://i.imgur.com/GFxLBRF.jpg";
+  // Si ya tenés el fondo andando, dejalo como está.
+  // Si querés setearlo por JS:
+  // const BACKGROUND_URL = "https://i.imgur.com/XXXX.jpg";
 
   // ===== STATE =====
   let products = [];
@@ -281,17 +313,17 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
 
   const productsEl = document.getElementById("products");
   const combinadosEl = document.getElementById("combinadosList");
-  const cartList = document.getElementById("cartList");
-  const cartTotal = document.getElementById("cartTotal");
+
+  const cartItemsEl = document.getElementById("cartItems");
+  const cartTotalEl = document.getElementById("cartTotal");
   const buyBtn = document.getElementById("buyBtn");
   const clearBtn = document.getElementById("clearBtn");
-  const cartCount = document.getElementById("cartCount");
+  const cartCountEl = document.getElementById("cartCount");
 
   // ===== HELPERS =====
   const fmt = (n) => Number(n||0).toLocaleString("es-AR");
   const money = (n) => `$${fmt(n)}`;
 
-  // CSV robusto (soporta comillas y comas)
   function parseCSV(text){
     text = text.replace(/\r/g, "");
     const rows = [];
@@ -353,7 +385,6 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     products = all.filter(p => !isCombinadoId(p.id));
     combinados = all.filter(p => isCombinadoId(p.id));
 
-    // limpiar carrito/pending si cambian IDs
     const ids = new Set(all.map(p => p.id));
     Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
     Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
@@ -370,7 +401,7 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     const el = document.createElement("div");
     el.className = "product";
     el.innerHTML = `
-      <img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">
+      ${p.image ? `<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">` : ""}
       <div class="product-name">${p.name}</div>
       <div class="product-price">${money(p.price)}</div>
 
@@ -399,33 +430,56 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     combinados.forEach(p => combinadosEl.appendChild(productCard(p)));
   }
 
-  function renderCart(){
-    cartList.innerHTML = "";
-    let total = 0;
-    let count = 0;
+  function cartCount(){
+    return Object.values(cart).reduce((a,b)=>a+(b||0),0);
+  }
 
+  function renderCart(){
     const all = [...products, ...combinados];
     const map = new Map(all.map(p => [p.id, p]));
 
-    Object.keys(cart).forEach(id => {
-      const q = cart[id] || 0;
-      const p = map.get(id);
-      if (!p || q <= 0) return;
+    cartItemsEl.innerHTML = "";
+    let total = 0;
 
+    const ids = Object.keys(cart).filter(id => (cart[id]||0) > 0);
+
+    if (ids.length === 0){
+      cartItemsEl.innerHTML = `<div class="empty">Tu carrito está vacío</div>`;
+      cartTotalEl.textContent = money(0);
+      cartCountEl.textContent = "0";
+      return;
+    }
+
+    ids.forEach(id => {
+      const p = map.get(id);
+      if (!p) return;
+
+      const q = cart[id];
       const sub = q * p.price;
       total += sub;
-      count += q;
 
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>${p.name} x${q}</span>
-        <span>${money(sub)}</span>
+      const row = document.createElement("div");
+      row.className = "cart-row";
+      row.innerHTML = `
+        <div>
+          <div class="cart-row-title">${p.name}</div>
+          <div class="cart-row-sub">${money(p.price)} c/u · Subtotal: <b>${money(sub)}</b></div>
+        </div>
+
+        <div class="cart-controls">
+          <button type="button" data-act="dec" data-id="${id}">−</button>
+          <div class="q">${q}</div>
+          <button type="button" data-act="inc" data-id="${id}">+</button>
+        </div>
+
+        <button class="cart-remove" type="button" data-act="remove" data-id="${id}">🗑</button>
       `;
-      cartList.appendChild(li);
+
+      cartItemsEl.appendChild(row);
     });
 
-    cartTotal.textContent = money(total);
-    cartCount.textContent = count;
+    cartTotalEl.textContent = money(total);
+    cartCountEl.textContent = String(cartCount());
   }
 
   function pendPlus(id){
@@ -467,21 +521,41 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
   productsEl.addEventListener("click", onGridClick);
   combinadosEl.addEventListener("click", onGridClick);
 
+  // Carrito: editar uno por uno
+  cartItemsEl.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const id = btn.getAttribute("data-id");
+    const act = btn.getAttribute("data-act");
+    if (!id || !act) return;
+
+    if (act === "inc"){
+      cart[id] = (cart[id] || 0) + 1;
+      renderProducts(); renderCombinados();
+      renderCart();
+    }
+    if (act === "dec"){
+      cart[id] = Math.max(0, (cart[id] || 0) - 1);
+      if (cart[id] === 0) delete cart[id];
+      renderProducts(); renderCombinados();
+      renderCart();
+    }
+    if (act === "remove"){
+      delete cart[id];
+      renderProducts(); renderCombinados();
+      renderCart();
+    }
+  });
+
   // Tabs
   const tabBtns = document.querySelectorAll(".tab-btn");
   const sections = document.querySelectorAll(".section");
-
   function openTab(name){
     tabBtns.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
     sections.forEach(s => s.classList.toggle("active", s.id === name));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
-  tabBtns.forEach(btn => {
-    btn.addEventListener("click", () => openTab(btn.dataset.tab));
-  });
-
-  // Ícono carrito abre pestaña carrito
+  tabBtns.forEach(btn => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
   document.getElementById("cartIcon").addEventListener("click", () => openTab("carrito"));
 
   clearBtn.addEventListener("click", clearCart);
@@ -510,13 +584,6 @@ footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
     text += `\n💰 Total: ${money(total)}`;
     window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
   });
-
-  // Fondo
-  (function setBackground(){
-    if (!BACKGROUND_URL || BACKGROUND_URL.includes("PEGAR_")) return;
-    document.body.classList.add("has-bg");
-    document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
-  })();
 
   // Init
   (async () => {
