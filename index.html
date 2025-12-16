@@ -18,17 +18,19 @@
 body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:var(--bg);
   color:var(--fg);
-  background:#000;
-  background-image:url("https://i.imgur.com/iacVJrq.png");
+}
+
+/* Fondo de la app (imagen + overlay) */
+body.has-bg{
+  background-color:#000;
   background-repeat:no-repeat;
   background-position:center top;
   background-size:420px;
   background-attachment:fixed;
 }
-
-/* Oscurecer fondo para contraste */
-body::before{
+body.has-bg::before{
   content:"";
   position:fixed;
   inset:0;
@@ -39,121 +41,171 @@ body::before{
 header{
   position:sticky;
   top:0;
+  z-index:10;
   background:#000;
   border-bottom:1px solid var(--border);
-  z-index:10;
 }
-
 .header-inner{
   max-width:1100px;
   margin:auto;
   padding:14px 20px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:space-between;
   font-weight:900;
   letter-spacing:2px;
   color:var(--gold);
+  gap:10px;
 }
-
-.cart-btn{
+.cart-icon{
+  display:flex;
+  align-items:center;
+  gap:10px;
   cursor:pointer;
-  font-size:20px;
+  user-select:none;
 }
-
-main{
-  max-width:1100px;
-  margin:auto;
-  padding:40px 20px;
-}
-
-h2{
+.cart-count{
+  background:var(--gold);
+  color:#000;
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:12px;
+  font-weight:900;
+  min-width:26px;
   text-align:center;
-  letter-spacing:2px;
-  margin-bottom:40px;
 }
+
+.tabs{
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px 20px 0;
+  display:flex;
+  justify-content:center;
+  gap:14px;
+}
+.tab-btn{
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  padding:10px 16px;
+  cursor:pointer;
+  font-weight:900;
+  letter-spacing:1px;
+}
+.tab-btn.active{
+  background:var(--gold);
+  color:#000;
+  border-color:var(--gold);
+}
+
+main{ max-width:1100px; margin:auto; padding:30px 20px 40px; }
+h2{ text-align:center; letter-spacing:2px; margin:18px 0 30px; }
+
+.section{ display:none; }
+.section.active{ display:block; }
 
 .products{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
   gap:40px;
 }
-
 .product{
   background:#fff;
   color:#000;
+  border-radius:4px;
   padding:20px;
   text-align:center;
 }
-
 .product img{
   max-width:180px;
-  margin-bottom:16px;
+  height:auto;
+  margin:0 auto 16px;
+  display:block;
 }
+.product-name{ font-size:14px; margin-bottom:6px; font-weight:800; }
+.product-price{ font-size:14px; margin-bottom:16px; }
 
 .qty{
   display:flex;
   justify-content:center;
+  align-items:center;
   gap:10px;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
-
 .qty button{
   width:32px;
   height:32px;
-  font-weight:900;
-}
-
-.add{
-  width:100%;
-  padding:8px;
-  font-weight:900;
+  border:1px solid #000;
+  background:#fff;
   cursor:pointer;
+  font-weight:900;
 }
-
-.cart-page{
-  display:none;
+.qty span{ min-width:30px; text-align:center; font-weight:900; }
+.add{
+  border:1px solid #000;
+  background:#fff;
+  padding:8px 14px;
+  cursor:pointer;
+  font-weight:900;
+  width:100%;
 }
+.hint{ font-size:12px; opacity:.75; margin-top:10px; }
 
-.cart-page.active{
-  display:block;
+.cart-wrap{
+  max-width:720px;
+  margin:0 auto;
+  border-top:1px solid var(--border);
+  padding-top:18px;
 }
-
-.products-page.active{
-  display:block;
-}
-
-.products-page{
-  display:none;
-}
-
-.cart-list{
-  list-style:none;
-  padding:0;
-}
-
-.cart-list li{
+.cart-wrap ul{ list-style:none; padding:0; margin:0 0 18px; }
+.cart-wrap li{
   display:flex;
   justify-content:space-between;
-  margin-bottom:8px;
+  gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid #1b1b1b;
 }
-
+.cart-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.cart-actions button{
+  width:32px;height:32px;
+  background:#111;
+  color:#fff;
+  border:1px solid #333;
+  cursor:pointer;
+  font-weight:900;
+}
+.cart-total{
+  display:flex;
+  justify-content:space-between;
+  font-weight:900;
+  margin-bottom:14px;
+}
 .buy{
   width:100%;
   padding:14px;
   background:var(--gold);
-  font-weight:900;
   border:none;
+  font-weight:900;
   cursor:pointer;
-  margin-top:20px;
 }
+.danger{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  background:#111;
+  color:#f5f5f5;
+  border:1px solid #333;
+  font-weight:900;
+  cursor:pointer;
+  border-radius:10px;
+}
+footer{ margin-top:40px; text-align:center; font-size:12px; opacity:.7; }
+.small-note{ text-align:center; font-size:12px; opacity:.75; margin-top:10px; }
 
-footer{
-  margin-top:60px;
-  text-align:center;
-  font-size:12px;
-  opacity:.7;
-}
 </style>
 </head>
 
@@ -162,120 +214,316 @@ footer{
 <header>
   <div class="header-inner">
     <div>TABAQO</div>
-    <div class="cart-btn" onclick="showCart()">🛒</div>
+
+    <div class="cart-icon" id="cartIcon" title="Ir al carrito">
+      🛒 <span class="cart-count" id="cartCount">0</span>
+    </div>
   </div>
 </header>
 
+<div class="tabs">
+  <button class="tab-btn active" data-tab="productos">PRODUCTOS</button>
+  <button class="tab-btn" data-tab="combinados">COMBINADOS</button>
+  <button class="tab-btn" data-tab="carrito">CARRITO</button>
+</div>
+
 <main>
+  <section class="section active" id="productos">
+    <h2>PRODUCTOS</h2>
+    <div class="products" id="products"></div>
+  </section>
 
-<section class="products-page active" id="productsPage">
-  <h2>PRODUCTOS</h2>
-  <div class="products" id="products"></div>
-</section>
+  <section class="section" id="combinados">
+    <h2>COMBINADOS</h2>
+    <div class="products" id="combinadosList"></div>
+    <div class="small-note">Se cargan desde el Google Sheet con id: Combinado1, Combinado2, etc.</div>
+  </section>
 
-<section class="cart-page" id="cartPage">
-  <h2>CARRITO</h2>
-  <ul class="cart-list" id="cartList"></ul>
-  <div><b>Total:</b> <span id="cartTotal">$0</span></div>
-  <button class="buy" onclick="buy()">INICIAR COMPRA POR WHATSAPP</button>
-  <button class="buy" style="background:#111;color:#fff" onclick="clearCart()">VACIAR CARRITO</button>
-</section>
+  <section class="section" id="carrito">
+    <h2>CARRITO</h2>
 
-<footer>
-Compra directa por WhatsApp · No se solicitan datos personales
-</footer>
+    <div class="cart-wrap">
+      <ul id="cartList"></ul>
 
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotal">$0</span>
+      </div>
+
+      <button class="buy" id="buyBtn">INICIAR COMPRA POR WHATSAPP</button>
+      <button class="danger" id="clearBtn" type="button">VACIAR CARRITO</button>
+    </div>
+
+    <footer>Compra directa por WhatsApp. No se solicitan datos personales.</footer>
+  </section>
 </main>
 
 <script>
-const SHEET =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
+  // ===== CONFIG =====
+  const WHATSAPP_PHONE = "5493515060159";
 
-const PHONE="5493515060159";
-let products=[], cart={}, pending={};
+  // Tu CSV publicado:
+  const SHEET_CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXfu7as7scLMqrv48bHpytzzRwK0VlgPfVrOJ_3MsqnNBzfC0TRjsfO52HSsVjMkAzWJaGvcMh12Hv/pub?output=csv";
 
-const productsEl=document.getElementById("products");
-const cartList=document.getElementById("cartList");
-const cartTotal=document.getElementById("cartTotal");
+  // 👇 PEGÁ ACÁ EL LINK DIRECTO de Imgur (i.imgur.com/... .png/.jpg)
+  const BACKGROUND_URL = "https://i.imgur.com/AbC1234.jpg";
 
-function money(n){return "$"+n.toLocaleString("es-AR")}
+  // ===== STATE =====
+  let products = [];
+  let combinados = [];
+  let cart = {};     // {id: qty}
+  let pending = {};  // {id: qtyPendiente}
 
-function parseCSV(t){
-  const [h,...r]=t.trim().split("\n").map(l=>l.split(","));
-  return r.map(l=>Object.fromEntries(h.map((k,i)=>[k.trim(),l[i]?.trim()])));
-}
+  const productsEl = document.getElementById("products");
+  const combinadosEl = document.getElementById("combinadosList");
+  const cartList = document.getElementById("cartList");
+  const cartTotal = document.getElementById("cartTotal");
+  const buyBtn = document.getElementById("buyBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const cartCount = document.getElementById("cartCount");
 
-async function load(){
-  const res=await fetch(SHEET+"&v="+Date.now());
-  const rows=parseCSV(await res.text());
-  products=rows.filter(p=>p.activo==="1");
-  render();
-}
+  // ===== HELPERS =====
+  const fmt = (n) => Number(n||0).toLocaleString("es-AR");
+  const money = (n) => `$${fmt(n)}`;
 
-function render(){
-  productsEl.innerHTML="";
-  products.forEach(p=>{
-    const q=pending[p.id]||0;
-    const d=document.createElement("div");
-    d.className="product";
-    d.innerHTML=`
-      <img src="${p.imagen}">
-      <div>${p.nombre}</div>
-      <div>${money(+p.precio)}</div>
+  // CSV robusto (soporta comillas y comas)
+  function parseCSV(text){
+    text = text.replace(/\r/g, "");
+    const rows = [];
+    let row = [];
+    let cur = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++){
+      const ch = text[i];
+      if (ch === '"'){
+        if (inQuotes && text[i+1] === '"'){ cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes){
+        row.push(cur); cur = "";
+      } else if (ch === '\n' && !inQuotes){
+        row.push(cur); rows.push(row);
+        row = []; cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    if (cur.length || row.length){ row.push(cur); rows.push(row); }
+
+    const headers = rows.shift().map(h => h.trim().toLowerCase().replace(/^\uFEFF/, ""));
+    return rows
+      .filter(r => r.some(x => String(x).trim() !== ""))
+      .map(r => {
+        const obj = {};
+        headers.forEach((h, idx) => obj[h] = (r[idx] ?? "").trim());
+        return obj;
+      });
+  }
+
+  function cleanUrl(u){
+    return String(u || "").trim().replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+  }
+
+  function isCombinadoId(id){
+    return /^combinado\d+$/i.test(String(id||"").trim());
+  }
+
+  async function loadProducts(){
+    const url = SHEET_CSV_URL + (SHEET_CSV_URL.includes("?") ? "&" : "?") + "v=" + Date.now();
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error("No se pudo leer el CSV (HTTP " + res.status + ")");
+
+    const rows = parseCSV(await res.text());
+
+    const all = rows
+      .filter(r => String(r.activo).trim() === "1")
+      .map(r => ({
+        id: String(r.id || "").trim(),
+        name: String(r.nombre || "").trim(),
+        price: Number(String(r.precio || "0").replace(/[^\d]/g, "")),
+        image: cleanUrl(r.imagen)
+      }))
+      .filter(p => p.id && p.name && Number.isFinite(p.price));
+
+    products = all.filter(p => !isCombinadoId(p.id));
+    combinados = all.filter(p => isCombinadoId(p.id));
+
+    // limpiar carrito/pending si cambian IDs
+    const ids = new Set(all.map(p => p.id));
+    Object.keys(cart).forEach(id => { if (!ids.has(id)) delete cart[id]; });
+    Object.keys(pending).forEach(id => { if (!ids.has(id)) delete pending[id]; });
+
+    renderProducts();
+    renderCombinados();
+    renderCart();
+  }
+
+  function productCard(p){
+    const pend = pending[p.id] || 0;
+    const inCart = cart[p.id] || 0;
+
+    const el = document.createElement("div");
+    el.className = "product";
+    el.innerHTML = `
+      <img src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">
+      <div class="product-name">${p.name}</div>
+      <div class="product-price">${money(p.price)}</div>
+
       <div class="qty">
-        <button onclick="pending['${p.id}']=(pending['${p.id}']||0)-1;render()">−</button>
-        <b>${q}</b>
-        <button onclick="pending['${p.id}']=(pending['${p.id}']||0)+1;render()">+</button>
+        <button type="button" data-act="pendMinus" data-id="${p.id}">−</button>
+        <span>${pend}</span>
+        <button type="button" data-act="pendPlus" data-id="${p.id}">+</button>
       </div>
-      <button class="add" onclick="add('${p.id}')">AGREGAR</button>
+
+      <button class="add" type="button" data-act="addToCart" data-id="${p.id}">
+        AGREGAR AL CARRITO
+      </button>
+
+      <div class="hint">En carrito: <b>${inCart}</b></div>
     `;
-    productsEl.appendChild(d);
+    return el;
+  }
+
+  function renderProducts(){
+    productsEl.innerHTML = "";
+    products.forEach(p => productsEl.appendChild(productCard(p)));
+  }
+
+  function renderCombinados(){
+    combinadosEl.innerHTML = "";
+    combinados.forEach(p => combinadosEl.appendChild(productCard(p)));
+  }
+
+  function renderCart(){
+    cartList.innerHTML = "";
+    let total = 0;
+    let count = 0;
+
+    const all = [...products, ...combinados];
+    const map = new Map(all.map(p => [p.id, p]));
+
+    Object.keys(cart).forEach(id => {
+      const q = cart[id] || 0;
+      const p = map.get(id);
+      if (!p || q <= 0) return;
+
+      const sub = q * p.price;
+      total += sub;
+      count += q;
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>${p.name} x${q}</span>
+        <span>${money(sub)}</span>
+      `;
+      cartList.appendChild(li);
+    });
+
+    cartTotal.textContent = money(total);
+    cartCount.textContent = count;
+  }
+
+  function pendPlus(id){
+    pending[id] = (pending[id] || 0) + 1;
+    renderProducts(); renderCombinados();
+  }
+  function pendMinus(id){
+    pending[id] = Math.max(0, (pending[id] || 0) - 1);
+    renderProducts(); renderCombinados();
+  }
+  function addToCart(id){
+    const q = pending[id] || 0;
+    if (q <= 0) return;
+    cart[id] = (cart[id] || 0) + q;
+    pending[id] = 0;
+    renderProducts(); renderCombinados();
+    renderCart();
+  }
+
+  function clearCart(){
+    cart = {};
+    pending = {};
+    renderProducts(); renderCombinados();
+    renderCart();
+  }
+
+  // Delegación clicks en grillas
+  function onGridClick(e){
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const id = btn.getAttribute("data-id");
+    const act = btn.getAttribute("data-act");
+    if (!id || !act) return;
+
+    if (act === "pendPlus") pendPlus(id);
+    if (act === "pendMinus") pendMinus(id);
+    if (act === "addToCart") addToCart(id);
+  }
+  productsEl.addEventListener("click", onGridClick);
+  combinadosEl.addEventListener("click", onGridClick);
+
+  // Tabs
+  const tabBtns = document.querySelectorAll(".tab-btn");
+  const sections = document.querySelectorAll(".section");
+
+  function openTab(name){
+    tabBtns.forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+    sections.forEach(s => s.classList.toggle("active", s.id === name));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener("click", () => openTab(btn.dataset.tab));
   });
-  updateCart();
-}
 
-function add(id){
-  if(!pending[id])return;
-  cart[id]=(cart[id]||0)+pending[id];
-  pending[id]=0;
-  render();
-}
+  // Ícono carrito abre pestaña carrito
+  document.getElementById("cartIcon").addEventListener("click", () => openTab("carrito"));
 
-function updateCart(){
-  cartList.innerHTML="";
-  let total=0;
-  for(const id in cart){
-    const p=products.find(x=>x.id===id);
-    const sub=cart[id]*p.precio;
-    total+=sub;
-    cartList.innerHTML+=`<li><span>${p.nombre} x${cart[id]}</span><span>${money(sub)}</span></li>`;
-  }
-  cartTotal.textContent=money(total);
-}
+  clearBtn.addEventListener("click", clearCart);
 
-function buy(){
-  let txt="Hola 👋 Quiero comprar:\n\n";
-  let total=0;
-  for(const id in cart){
-    const p=products.find(x=>x.id===id);
-    const sub=cart[id]*p.precio;
-    total+=sub;
-    txt+=`• ${p.nombre} x${cart[id]} – ${money(sub)}\n`;
-  }
-  txt+=`\nTotal: ${money(total)}`;
-  location.href=`https://wa.me/${PHONE}?text=${encodeURIComponent(txt)}`;
-}
+  buyBtn.addEventListener("click", () => {
+    const ids = Object.keys(cart).filter(id => (cart[id] || 0) > 0);
+    if (ids.length === 0){
+      alert("Agregá productos al carrito");
+      return;
+    }
 
-function clearCart(){cart={};updateCart();}
+    const all = [...products, ...combinados];
+    const map = new Map(all.map(p => [p.id, p]));
+    let total = 0;
+    let text = "Hola 👋 quiero hacer una compra:\n\n";
 
-function showCart(){
-  productsPage.classList.remove("active");
-  cartPage.classList.add("active");
-}
+    ids.forEach(id => {
+      const p = map.get(id);
+      const q = cart[id];
+      if (!p) return;
+      const sub = q * p.price;
+      total += sub;
+      text += `• ${p.name} x${q} – ${money(sub)}\n`;
+    });
 
-load();
+    text += `\n💰 Total: ${money(total)}`;
+    window.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
+  });
+
+  // Fondo
+  (function setBackground(){
+    if (!BACKGROUND_URL || BACKGROUND_URL.includes("PEGAR_")) return;
+    document.body.classList.add("has-bg");
+    document.body.style.backgroundImage = `url("${BACKGROUND_URL}")`;
+  })();
+
+  // Init
+  (async () => {
+    try{
+      await loadProducts();
+    } catch(err){
+      console.error(err);
+      alert("No se pudieron cargar productos. Revisá que el CSV esté publicado y que el link sea correcto.");
+    }
+  })();
 </script>
 
 </body>
 </html>
-
